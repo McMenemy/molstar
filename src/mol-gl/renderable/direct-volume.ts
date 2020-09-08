@@ -80,6 +80,7 @@ export const DirectVolumeSchema = {
     dFlatShaded: DefineSpec('boolean'),
     dIgnoreLight: DefineSpec('boolean'),
 
+    uCellDim: UniformSpec('v3'),
     uCartnToUnit: UniformSpec('m4'),
     uUnitToCartn: UniformSpec('m4'),
 };

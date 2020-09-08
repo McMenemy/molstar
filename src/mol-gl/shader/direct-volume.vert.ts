@@ -30,7 +30,8 @@ uniform mat4 uCartnToUnit;
 
 void main() {
     unitCoord = aPosition + vec3(0.5);
-    vec4 mvPosition = uModelView * uTransform * vec4(unitCoord * uGridDim, 1.0);
+    // vec4 mvPosition = uModelView * uTransform * vec4(unitCoord * uGridDim, 1.0);
+    vec4 mvPosition = uModelView * uUnitToCartn * vec4(unitCoord, 1.0);
     origPos = (uUnitToCartn * vec4(unitCoord, 1.0)).xyz; //  * uBboxSize + uBboxMin;
     instance = aInstance;
     gl_Position = uProjection * mvPosition;

@@ -296,6 +296,8 @@ namespace Renderer {
         const render = (scene: Scene, camera: Camera, variant: GraphicsRenderVariant, clear: boolean, transparentBackground: boolean) => {
             ValueCell.update(globalUniforms.uModel, scene.view);
             ValueCell.update(globalUniforms.uView, camera.view);
+            // console.log([...camera.position])
+            // console.log(Mat4.makeTable(Mat4.invert(invView, camera.view).map(v => Math.round(100 * v ) / 100) as Mat4) );
             ValueCell.update(globalUniforms.uInvView, Mat4.invert(invView, camera.view));
             ValueCell.update(globalUniforms.uModelView, Mat4.mul(modelView, scene.view, camera.view));
             ValueCell.update(globalUniforms.uInvModelView, Mat4.invert(invModelView, modelView));

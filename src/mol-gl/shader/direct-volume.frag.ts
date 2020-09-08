@@ -51,6 +51,7 @@ bool interior;
 
 uniform float uIsOrtho;
 
+uniform vec3 uCellDim;
 uniform vec3 uCameraPosition;
 uniform mat4 uUnitToCartn;
 uniform mat4 uCartnToUnit;
@@ -113,6 +114,10 @@ float calcDepth(const in vec3 cameraPos){
 
 const float gradOffset = 0.5;
 
+vec3 toUnit(vec3 p) {
+    return (uCartnToUnit * vec4(p, 1.0)).xyz;
+}
+
 vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
     vec3 scaleVol = vec3(1.0) / uGridDim;
     vec3 pos = startLoc;
@@ -126,6 +131,8 @@ vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
     vec3 posMin = vec3(0.0);
     vec3 posMax = vec3(1.0) - vec3(1.0) / uGridDim;
 
+    vec3 unitPos;
+
     #if defined(dRenderMode_isosurface)
         vec3 isoPos;
         float tmp;
@@ -137,16 +144,20 @@ vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
         vec3 dz = vec3(0.0, 0.0, gradOffset * scaleVol.z);
     #endif
 
-    for(int i = 0; i < uMaxSteps; ++i){
-        value = textureVal(pos).a; // current voxel value
+    for(int i = 0; i < uMaxSteps; ++i) {
+        // doing this likely breaks the isoSurface part
+        unitPos = toUnit(pos);
+
         // if(pos.x > 1.01 || pos.y > 1.01 || pos.z > 1.01 || pos.x < -0.01 || pos.y < -0.01 || pos.z < -0.01)
         //     break;
 
-        if(pos.x > posMax.x || pos.y > posMax.y || pos.z > posMax.z || pos.x < posMin.x || pos.y < posMin.y || pos.z < posMin.z) {
-            prevValue = value;
+        if(unitPos.x > posMax.x || unitPos.y > posMax.y || unitPos.z > posMax.z || unitPos.x < posMin.x || unitPos.y < posMin.y || unitPos.z < posMin.z) {
+            // prevValue = value;
             pos += step;
             continue;
         }
+        
+        value = textureVal(unitPos).a; // current voxel value
 
         #if defined(dRenderMode_volume)
             src = transferFunction(value);
@@ -245,10 +256,6 @@ vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
     return dst;
 }
 
-vec3 toUnit(vec3 p) {
-    return (uCartnToUnit * vec4(p, 1.0)).xyz;
-}
-
 vec3 toCartn(vec3 p) {
     return (uUnitToCartn * vec4(p, 1.0)).xyz;
 }
@@ -277,10 +284,12 @@ void main () {
     // vec3 step = rayDir * (1.0 / uGridDim) * 0.2;
     // vec3 startLoc = unitCoord; // - step * float(uMaxSteps);
 
-    vec3 rayDir = normalize(unitCoord - toUnit(uCameraPosition));
-    vec3 step = rayDir * (1.0 / uGridDim) * 0.2;
+    vec3 rayDir = normalize(origPos - uCameraPosition);
+    // TODO: set the scale as uniform?
+    float stepScale = min(uCellDim.x, min(uCellDim.y, uCellDim.z)) * 0.2;
+    vec3 step = rayDir * stepScale; // (1.0 / uGridDim) * 0.2;
 
-    gl_FragColor = raymarch(unitCoord, step);
+    gl_FragColor = raymarch(origPos, step);
 
     if (length(gl_FragColor.rgb) < 0.00001) discard;
     #if defined(dRenderMode_volume)
