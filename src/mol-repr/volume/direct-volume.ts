@@ -95,7 +95,8 @@ export function createDirectVolume2d(ctx: RuntimeContext, webgl: WebGLContext, v
     const texture = directVolume ? directVolume.gridTexture.ref.value : webgl.resources.texture('image-uint8', 'rgba', 'ubyte', 'linear');
     texture.load(textureImage);
 
-    return DirectVolume.create(bbox, dim, transform, texture, volume.grid.stats, directVolume);
+    const unitToCartn = getUnitToCartn(volume.grid);
+    return DirectVolume.create(bbox, dim, transform, unitToCartn, texture, volume.grid.stats, directVolume);
 }
 
 // 3d volume texture
@@ -124,6 +125,21 @@ function createVolumeTexture3d(volume: Volume) {
     return textureVolume;
 }
 
+
+function getUnitToCartn(grid: Grid) {
+    if (grid.transform.kind === 'matrix') {
+        return Mat4.mul(Mat4(),
+            Grid.getGridToCartesianTransform(grid),
+            Mat4.fromScaling(Mat4(), grid.cells.space.dimensions as Vec3));
+    }
+    const box = grid.transform.fractionalBox;
+    const size = Box3D.size(Vec3(), box);
+    return Mat4.mul3(Mat4(),
+        grid.transform.cell.fromFractional,
+        Mat4.fromTranslation(Mat4(), box.min),
+        Mat4.fromScaling(Mat4(), size));
+}
+
 export function createDirectVolume3d(ctx: RuntimeContext, webgl: WebGLContext, volume: Volume, directVolume?: DirectVolume) {
     const gridDimension = volume.grid.cells.space.dimensions as Vec3;
     const textureVolume = createVolumeTexture3d(volume);
@@ -133,7 +149,8 @@ export function createDirectVolume3d(ctx: RuntimeContext, webgl: WebGLContext, v
     const texture = directVolume ? directVolume.gridTexture.ref.value : webgl.resources.texture('volume-uint8', 'rgba', 'ubyte', 'linear');
     texture.load(textureVolume);
 
-    return DirectVolume.create(bbox, gridDimension, transform, texture, volume.grid.stats, directVolume);
+    const unitToCartn = getUnitToCartn(volume.grid);
+    return DirectVolume.create(bbox, gridDimension, transform, unitToCartn, texture, volume.grid.stats, directVolume);
 }
 
 //

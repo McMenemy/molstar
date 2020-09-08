@@ -79,6 +79,9 @@ export const DirectVolumeSchema = {
     dFlipSided: DefineSpec('boolean'),
     dFlatShaded: DefineSpec('boolean'),
     dIgnoreLight: DefineSpec('boolean'),
+
+    uCartnToUnit: UniformSpec('m4'),
+    uUnitToCartn: UniformSpec('m4'),
 };
 export type DirectVolumeSchema = typeof DirectVolumeSchema
 export type DirectVolumeValues = Values<DirectVolumeSchema>

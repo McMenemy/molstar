@@ -25,10 +25,13 @@ uniform mat4 uTransform;
 uniform mat4 uModelView;
 uniform mat4 uProjection;
 
+uniform mat4 uUnitToCartn;
+uniform mat4 uCartnToUnit;
+
 void main() {
     unitCoord = aPosition + vec3(0.5);
     vec4 mvPosition = uModelView * uTransform * vec4(unitCoord * uGridDim, 1.0);
-    origPos = unitCoord * uBboxSize + uBboxMin;
+    origPos = (uUnitToCartn * vec4(unitCoord, 1.0)).xyz; //  * uBboxSize + uBboxMin;
     instance = aInstance;
     gl_Position = uProjection * mvPosition;
 

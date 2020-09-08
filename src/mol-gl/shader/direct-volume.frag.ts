@@ -51,6 +51,10 @@ bool interior;
 
 uniform float uIsOrtho;
 
+uniform vec3 uCameraPosition;
+uniform mat4 uUnitToCartn;
+uniform mat4 uCartnToUnit;
+
 #if __VERSION__ == 300
     // for webgl1 this is given as a 'define'
     uniform int uMaxSteps;
@@ -109,7 +113,7 @@ float calcDepth(const in vec3 cameraPos){
 
 const float gradOffset = 0.5;
 
-vec4 raymarch(vec3 startLoc, vec3 step, vec3 viewDir, vec3 rayDir) {
+vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
     vec3 scaleVol = vec3(1.0) / uGridDim;
     vec3 pos = startLoc;
     float prevValue = -1.0;
@@ -241,6 +245,14 @@ vec4 raymarch(vec3 startLoc, vec3 step, vec3 viewDir, vec3 rayDir) {
     return dst;
 }
 
+vec3 toUnit(vec3 p) {
+    return (uCartnToUnit * vec4(p, 1.0)).xyz;
+}
+
+vec3 toCartn(vec3 p) {
+    return (uUnitToCartn * vec4(p, 1.0)).xyz;
+}
+
 // TODO calculate normalMatrix on CPU
 // TODO fix orthographic projection
 // TODO fix near/far clipping
@@ -260,13 +272,16 @@ void main () {
     #endif
     // gl_FragColor = vec4(1.0, 0.0, 0.0, uAlpha);
 
-    vec3 cameraPos = uInvView[3].xyz / uInvView[3].w;
+    // vec3 cameraPos = uInvView[3].xyz / uInvView[3].w;
+    // vec3 rayDir = normalize(origPos - cameraPos);
+    // vec3 step = rayDir * (1.0 / uGridDim) * 0.2;
+    // vec3 startLoc = unitCoord; // - step * float(uMaxSteps);
 
-    vec3 rayDir = normalize(origPos - cameraPos);
+    vec3 rayDir = normalize(unitCoord - toUnit(uCameraPosition));
     vec3 step = rayDir * (1.0 / uGridDim) * 0.2;
-    vec3 startLoc = unitCoord; // - step * float(uMaxSteps);
 
-    gl_FragColor = raymarch(startLoc, step, normalize(cameraPos), rayDir);
+    gl_FragColor = raymarch(unitCoord, step);
+
     if (length(gl_FragColor.rgb) < 0.00001) discard;
     #if defined(dRenderMode_volume)
         gl_FragColor.a *= uAlpha;

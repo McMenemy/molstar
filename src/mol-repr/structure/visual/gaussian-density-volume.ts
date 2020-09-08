@@ -15,6 +15,7 @@ import { LocationIterator } from '../../../mol-geo/util/location-iterator';
 import { NullLocation } from '../../../mol-model/location';
 import { EmptyLoci } from '../../../mol-model/loci';
 import { VisualUpdateState } from '../../util';
+import { Mat4 } from '../../../mol-math/linear-algebra';
 
 async function createGaussianDensityVolume(ctx: VisualContext, structure: Structure, theme: Theme, props: GaussianDensityTextureProps, directVolume?: DirectVolume): Promise<DirectVolume> {
     const { runtime, webgl } = ctx;
@@ -26,7 +27,8 @@ async function createGaussianDensityVolume(ctx: VisualContext, structure: Struct
     const { transform, texture, bbox, gridDim } = densityTextureData;
     const stats = { min: 0, max: 1, mean: 0.5, sigma: 0.1 };
 
-    return DirectVolume.create(bbox, gridDim, transform, texture, stats, directVolume);
+    // TODO: this is now broken!!!
+    return DirectVolume.create(bbox, gridDim, transform, Mat4.identity(), texture, stats, directVolume);
 }
 
 export const GaussianDensityVolumeParams = {
