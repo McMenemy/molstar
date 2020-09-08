@@ -152,11 +152,13 @@ vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
         //     break;
 
         if(unitPos.x > posMax.x || unitPos.y > posMax.y || unitPos.z > posMax.z || unitPos.x < posMin.x || unitPos.y < posMin.y || unitPos.z < posMin.z) {
+            if (hit) break;
             // prevValue = value;
             pos += step;
             continue;
         }
-        
+                
+        hit = true;
         value = textureVal(unitPos).a; // current voxel value
 
         #if defined(dRenderMode_volume)
@@ -164,6 +166,9 @@ vec4 raymarch(vec3 startLoc, vec3 step/*, vec3 viewDir, vec3 rayDir */) {
             src.rgb *= src.a;
             dst = (1.0 - dst.a) * src + dst; // standard blending
         #endif
+
+        // break if the color is opaque enough. Is this correct?
+        if (dst.a > 0.95) break;
 
         #if defined(dRenderMode_isosurface)
             if(prevValue > 0.0 && ( // there was a prev Value
